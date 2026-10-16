@@ -26,9 +26,8 @@ sh run_tests.sh                # run tests/*.lisp against tests/*.expected
 
 ## Source layout
 
-- `SExpr.java`: the S-expression type: `Symbol`, `Cons` (pair cell), `Nil`.
+- `SExpr.java`: the S-expression type (`Symbol`, `Cons`, `Nil`); each prints itself via `toString`, with dotted notation for improper tails.
 - `Parser.java`: reads S-expressions from a character stream.
-- `Printer.java`: prints S-expressions, using dotted notation for improper tails.
 - `Main.java`: the read/print loop.
 
 ## AI disclosure
