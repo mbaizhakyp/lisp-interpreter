@@ -1,3 +1,4 @@
+import java.io.InputStream;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
@@ -12,7 +13,7 @@ public class Parser {
     private static final Pattern TOKEN = Pattern.compile("[()]|[^\\s()]+");
     private final Scanner in;
 
-    public Parser(Readable in) {
+    public Parser(InputStream in) {
         this.in = new Scanner(in);
     }
 

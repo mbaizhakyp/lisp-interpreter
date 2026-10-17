@@ -22,8 +22,8 @@ An interpreter for the S-expression language from CS503 Project 1 (parts 1.1 to 
 
 ```sh
 javac -d out src/*.java        # compiles into out/
-java -cp out Main              # interactive (prompt "=> ")
-java -cp out Main file.lisp    # run a file
+java -cp out Main              # type expressions, Ctrl-D to end
+java -cp out Main < file.lisp  # run a file
 ```
 
 ## Test
@@ -32,7 +32,7 @@ Each `tests/NAME.lisp` is test input and `tests/NAME.expected` is its expected o
 
 ```sh
 for t in tests/*.lisp; do
-    echo "== $t"; java -cp out Main $t | tee out/actual.txt
+    echo "== $t"; java -cp out Main < $t | tee out/actual.txt
     diff ${t%.lisp}.expected out/actual.txt && echo "PASS $t" || echo "FAIL $t"
 done > test-output.txt
 ```
