@@ -7,8 +7,3 @@ x
 (a)
 (a b)
 a
-a
-(b c)
-((a b) c d)
-(quote a)
-b

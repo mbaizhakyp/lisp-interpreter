@@ -7,8 +7,3 @@
 (cons a ())
 (cons a (cons b ()))
 'a
-(car '(a b c))
-(cdr '(a b c))
-(cons '(a b) '(c d))
-''a
-(car (cdr '(a b c)))
