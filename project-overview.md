@@ -156,6 +156,9 @@ Keeping `rho` and the local stack as actual S-expressions (not Java maps) is wha
 4. 1.4 + 1.5, test, **submit**.
 5. 1.6 + 1.7 + 1.8, test with recursive functions (factorial, list length, append, reverse), **submit**.
 6. Final submission with a test file of example sessions.
-   - **Required by the instructor (relayed 2026-10-16):** the test code must include the **blackjack**, **bowling**, and **rev2lisp** programs. Their source isn't in the PDFs; the course's "Lisp Blackjack" item (section 2) is likely where blackjack comes from. Get all three, add each as `tests/NAME.lisp` with `NAME.expected`, and make sure the interpreter runs them.
+   - **Required by the instructor (relayed 2026-10-16):** the test code must include the **blackjack**, **bowling**, and **rpn2lisp** ("rev2lisp") programs, each as `tests/NAME.lisp` + `NAME.expected` that the interpreter runs.
+     - `final/bowling.lisp` and `final/rpn2lisp.txt` hold the instructor's code as given (not in the zip or test loop yet). Blackjack we write ourselves.
+     - bowling as given won't parse: `frame`'s `cond` is missing 3 closing parens and has no open-frame case (neither strike nor spare).
+     - rpn2lisp as given won't parse: `(op? (car rpn)` is missing its `)`, which swallows everything after `r2l`. It also uses `not` (spec names `not?`), `;` comments right after `)`, and builds `(+ 2 (- x 3))`, so `+ - * /` must work as aliases for `add sub mul div` for its final `eval` to give `(add 2 (sub 4 3))` = 3.
 
 Keep a test file per stage (input `.lisp` + expected output) so each stage's grading has evidence and earlier stages don't break.
