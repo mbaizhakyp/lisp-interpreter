@@ -1,15 +1,10 @@
 #!/bin/sh
-# Runs every tests/NAME.lisp and compares its output with tests/NAME.expected.
+# Runs every tests/NAME.lisp, diffs its output with tests/NAME.expected, and saves the log to test-output.txt.
 cd "$(dirname "$0")" && sh build.sh || exit 1
-fail=0
 for t in tests/*.lisp; do
-    name=${t%.lisp}
-    if java -cp out Main "$t" | diff -u "$name.expected" - > /dev/null; then
-        echo "PASS $name"
-    else
-        echo "FAIL $name"
-        java -cp out Main "$t" | diff -u "$name.expected" -
-        fail=1
-    fi
-done
-exit $fail
+    echo "== $t"
+    java -cp out Main "$t" > out/actual.txt
+    cat out/actual.txt
+    diff -u "${t%.lisp}.expected" out/actual.txt && echo "PASS $t" || echo "FAIL $t"
+done 2>&1 | tee test-output.txt
+! grep -q '^FAIL' test-output.txt

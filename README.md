@@ -1,17 +1,11 @@
 # CS503 Lisp Interpreter
 
-An interpreter for the S-expression language from CS503 Project 1 (parts 1.1 to 1.8), written in Java 17+.
+- **Student:** Margulan Baizhakyp
+- **Language:** Java 17 or newer
 
-## Build and run
+## Summary
 
-```sh
-sh build.sh                    # compiles src/*.java into out/
-java -cp out Main              # interactive REPL (prompt "=> ")
-java -cp out Main file.lisp    # run a file
-sh run_tests.sh                # run tests/*.lisp against tests/*.expected
-```
-
-## Progress
+An interpreter for the S-expression language from CS503 Project 1 (parts 1.1 to 1.8). It reads S-expressions from the keyboard or a file and prints them; later parts add evaluation.
 
 | Part | Status |
 |---|---|
@@ -24,11 +18,43 @@ sh run_tests.sh                # run tests/*.lisp against tests/*.expected
 | 1.7 Function calls | Not started |
 | 1.8 def | Not started |
 
-## Source layout
+## Build
 
-- `SExpr.java`: the S-expression type (`Symbol`, `Cons`, `Nil`); each prints itself via `toString`, with dotted notation for improper tails.
-- `Parser.java`: reads S-expressions from a character stream.
-- `Main.java`: the read/print loop.
+```sh
+sh build.sh                    # compiles src/*.java into out/
+java -cp out Main              # interactive (prompt "=> ")
+java -cp out Main file.lisp    # run a file
+```
+
+## Test
+
+```sh
+sh run_tests.sh    # runs each tests/NAME.lisp, diffs against tests/NAME.expected, saves everything to test-output.txt
+sh submit.sh       # runs the tests, then builds submissions/lisp-interpreter.zip
+```
+
+## Directory structure
+
+```
+README.md          this file
+build.sh           compile script
+run_tests.sh       test runner
+submit.sh          builds the submission zip
+test-output.txt    output of the last test run
+src/
+  Main.java        read/print loop
+  Parser.java      turns text into S-expressions
+  SExpr.java       S-expression types (Symbol, Cons, Nil); each prints itself
+tests/
+  NAME.lisp        test input for part NAME
+  NAME.expected    expected output
+```
+
+## Limitations
+
+- Only part 1.1 is done: expressions are read and printed, not evaluated.
+- The reader does not accept dotted notation such as `(a . b)` (the spec does not require it), though the printer can print it.
+- An unbalanced `)` or a missing `)` prints `error: ...` and the reader moves on.
 
 ## AI disclosure
 
