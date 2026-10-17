@@ -1,4 +1,4 @@
-/** Reads S-expressions from standard input and prints them (part 1.1). */
+/** Reads S-expressions from standard input, evaluates them, and prints the results. */
 public class Main {
     public static void main(String[] args) {
         Parser parser = new Parser(System.in);
@@ -6,8 +6,8 @@ public class Main {
             try {
                 SExpr expr = parser.next();
                 if (expr == null) return;
-                System.out.println(expr);
-            } catch (IllegalStateException e) {
+                System.out.println(Eval.eval(expr));
+            } catch (RuntimeException e) {
                 System.out.println("error: " + e.getMessage());
             }
         }

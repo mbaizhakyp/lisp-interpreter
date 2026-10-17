@@ -1,0 +1,14 @@
+a
+(b c)
+a
+(b c)
+x
+(a . b)
+(a)
+(a b)
+a
+a
+(b c)
+((a b) c d)
+(quote a)
+b

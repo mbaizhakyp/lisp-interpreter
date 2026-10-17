@@ -5,12 +5,12 @@
 
 ## Summary
 
-An interpreter for the S-expression language from CS503 Project 1 (parts 1.1 to 1.8). It reads S-expressions from the keyboard or a file and prints them; later parts add evaluation.
+An interpreter for the S-expression language from CS503 Project 1 (parts 1.1 to 1.8). It reads S-expressions from the keyboard or a file, evaluates them, and prints the results. So far it supports `car`, `cdr`, `cons`, `quote`, `eval`, and the `'x` shorthand for `(quote x)`; a list that does not start with one of these evaluates to itself.
 
 | Part | Status |
 |---|---|
 | 1.1 Print Read S-Expressions | Done |
-| 1.2 List Ops | Not started |
+| 1.2 List Ops | Done |
 | 1.3 Variables | Not started |
 | 1.4 Logical | Not started |
 | 1.5 Math | Not started |
@@ -43,8 +43,9 @@ done > test-output.txt
 README.md          this file
 test-output.txt    output of the last test run (see Test)
 src/
-  Main.java        read/print loop
-  Parser.java      turns text into S-expressions
+  Main.java        read/eval/print loop
+  Eval.java        evaluates car, cdr, cons, quote, eval
+  Parser.java      turns text into S-expressions, 'x into (quote x)
   SExpr.java       S-expression types (Symbol, Cons, Nil); each prints itself
 tests/
   NAME.lisp        test input for part NAME
@@ -53,7 +54,8 @@ tests/
 
 ## Limitations
 
-- Only part 1.1 is done: expressions are read and printed, not evaluated.
+- Parts 1.3 to 1.8 are not done yet: no variables, logic, math, or functions.
+- `car` or `cdr` on an atom or `()`, and `cons` with one argument, are undefined in the spec; they print `error: ...` and the loop moves on.
 - The reader does not accept dotted notation such as `(a . b)` (the spec does not require it), though the printer can print it.
 - An unbalanced `)` or a missing `)` prints `error: ...` and the reader moves on.
 
