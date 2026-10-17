@@ -21,7 +21,7 @@ An interpreter for the S-expression language from CS503 Project 1 (parts 1.1 to 
 ## Build
 
 ```sh
-sh build.sh                    # compiles src/*.java into out/
+javac -d out src/*.java        # compiles into out/
 java -cp out Main              # interactive (prompt "=> ")
 java -cp out Main file.lisp    # run a file
 ```
@@ -29,17 +29,14 @@ java -cp out Main file.lisp    # run a file
 ## Test
 
 ```sh
-sh run_tests.sh    # runs each tests/NAME.lisp, diffs against tests/NAME.expected, saves everything to test-output.txt
-sh submit.sh       # runs the tests, then builds submissions/lisp-interpreter.zip
+sh run_tests.sh    # compiles, runs each tests/NAME.lisp, diffs against tests/NAME.expected, saves everything to test-output.txt
 ```
 
 ## Directory structure
 
 ```
 README.md          this file
-build.sh           compile script
 run_tests.sh       test runner
-submit.sh          builds the submission zip
 test-output.txt    output of the last test run
 src/
   Main.java        read/print loop

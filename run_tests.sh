@@ -1,6 +1,6 @@
 #!/bin/sh
 # Runs every tests/NAME.lisp, diffs its output with tests/NAME.expected, and saves the log to test-output.txt.
-cd "$(dirname "$0")" && sh build.sh || exit 1
+cd "$(dirname "$0")" && javac -d out src/*.java || exit 1
 for t in tests/*.lisp; do
     echo "== $t"
     java -cp out Main "$t" > out/actual.txt
