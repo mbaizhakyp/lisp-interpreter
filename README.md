@@ -28,16 +28,20 @@ java -cp out Main file.lisp    # run a file
 
 ## Test
 
+Each `tests/NAME.lisp` is test input and `tests/NAME.expected` is its expected output. After building, run every test, compare it with the expected output, and save the log to `test-output.txt`:
+
 ```sh
-sh run_tests.sh    # compiles, runs each tests/NAME.lisp, diffs against tests/NAME.expected, saves everything to test-output.txt
+for t in tests/*.lisp; do
+    echo "== $t"; java -cp out Main $t | tee out/actual.txt
+    diff ${t%.lisp}.expected out/actual.txt && echo "PASS $t" || echo "FAIL $t"
+done > test-output.txt
 ```
 
 ## Directory structure
 
 ```
 README.md          this file
-run_tests.sh       test runner
-test-output.txt    output of the last test run
+test-output.txt    output of the last test run (see Test)
 src/
   Main.java        read/print loop
   Parser.java      turns text into S-expressions
