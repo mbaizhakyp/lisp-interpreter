@@ -3,14 +3,14 @@ import java.util.Scanner;
 import java.util.regex.Pattern;
 
 /**
- * Reads S-expressions one at a time. Expressions may span lines, and a line may hold several.
+ * Reads S-expressions one at a time. Expressions may span lines, and a line may hold several; ; starts a comment.
  *
  *   START => EXPR START | EOF
  *   EXPR  => ATOM | ( LIST | ' EXPR
  *   LIST  => ) | EXPR LIST
  */
 public class Parser {
-    private static final Pattern TOKEN = Pattern.compile("[()']|[^\\s()']+");
+    private static final Pattern TOKEN = Pattern.compile(";.*|[()']|[^\\s()';]+");
     private static final Symbol QUOTE = new Symbol("quote");
     private final Scanner in;
 
@@ -25,7 +25,10 @@ public class Parser {
     }
 
     private String token() {
-        return in.findWithinHorizon(TOKEN, 0); // skips whitespace; null at EOF
+        String t;
+        do t = in.findWithinHorizon(TOKEN, 0); // skips whitespace; null at EOF
+        while (t != null && t.startsWith(";")); // skips ; comments
+        return t;
     }
 
     private SExpr expr(String t) {
