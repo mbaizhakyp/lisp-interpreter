@@ -13,6 +13,7 @@ An interpreter for the S-expression language from CS503 Project 1 (parts 1.1 to 
 - 1.4: `and?`, `or?` (short-circuit), `eq?`, `if`, and `cond` with a flat `(a0 b0 a1 b1 ...)` list.
 - 1.5: `add`, `sub`, `mul`, `div`, `rem`, `less` on integer symbols.
 - 1.6: a local environment stack of `((names) (values))` frames, searched (top frame) before `rho`; `(function (args) body)` evaluates to itself.
+- 1.7: calling user functions: arguments are evaluated, a frame is pushed, the body is evaluated, the frame is popped.
 
 | Part | Status |
 |---|---|
@@ -22,7 +23,7 @@ An interpreter for the S-expression language from CS503 Project 1 (parts 1.1 to 
 | 1.4 Logical | Done |
 | 1.5 Math | Done |
 | 1.6 Local Environment | Done |
-| 1.7 Function calls | Not started |
+| 1.7 Function calls | Done |
 | 1.8 def | Not started |
 
 ## Build
@@ -61,10 +62,10 @@ tests/
 
 ## Limitations
 
-- Parts 1.7 to 1.8 are not done yet: no function calls or `def`.
+- Part 1.8 is not done yet: no `def`.
 - `car` or `cdr` on an atom or `()`, and `cons` or `set` with one argument, are undefined in the spec; they print `error: ...` and the loop moves on. `atom?` and `list?` on `()` (also undefined) return `()`.
 - Math on a non-number, or `div`/`rem` by 0, prints `error: ...`.
-- Local lookup searches only the top frame of the local stack, then `rho`. 1.6 has no way to push a frame from Lisp yet (function calls come in 1.7), so `tests/1.6.lisp` checks function expressions; local lookup was checked by starting the stack with the spec's `((a b c) (2 3 x))` frame.
+- Local lookup searches only the top frame of the local stack, then `rho`. Built-ins are checked before user functions, so a user function cannot replace a built-in. Argument counts are not checked, and the optional inline `((function (a b) ...) 1 2)` call is not supported.
 - `cond` with no true test (undefined in the spec) returns `()`.
 - The reader does not accept dotted notation such as `(a . b)` (the spec does not require it), though the printer can print it.
 - An unbalanced `)` or a missing `)` prints `error: ...` and the reader moves on.

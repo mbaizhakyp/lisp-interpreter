@@ -1,6 +1,6 @@
-/** Evaluates S-expressions. Symbols are looked up in the local environment, then rho; a list starting with a built-in name is a call; anything else evaluates to itself. */
+/** Evaluates S-expressions. Symbols are looked up in the local environment, then rho; a list starting with a built-in or a function name is a call; anything else evaluates to itself. */
 class Eval {
-    static final SExpr NIL = Nil.NIL, T = new Symbol("T");
+    static final SExpr NIL = Nil.NIL, T = new Symbol("T"), FUNCTION = new Symbol("function");
     static SExpr rho = NIL; // global environment ((name value) ...), newest first
     static SExpr env = NIL; // local environment stack (((names) (values)) ...), top frame first
 
@@ -45,8 +45,24 @@ class Eval {
                     default -> truth(x < y);
                 };
             }
-            default -> s;
+            default -> call(lookup(f), args, s);
         };
+    }
+
+    /** Calls fn = (function params body): pushes the frame (params actuals), evaluates body, pops. Not a function: s itself. */
+    static SExpr call(SExpr fn, SExpr args, SExpr s) {
+        if (!(fn instanceof Cons fc && fc.car().equals(FUNCTION))) return s;
+        SExpr frame = new Cons(arg(fn, 1), new Cons(evalAll(args), NIL));
+        env = new Cons(frame, env);
+        try {
+            return eval(arg(fn, 2));
+        } finally {
+            env = ((Cons) env).cdr();
+        }
+    }
+
+    static SExpr evalAll(SExpr list) {
+        return list instanceof Cons c ? new Cons(eval(c.car()), evalAll(c.cdr())) : NIL;
     }
 
     /** (cond (a0 b0 a1 b1 ...)): the value of the b after the first a that is not (), or () if there is none. */
