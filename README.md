@@ -12,6 +12,7 @@ An interpreter for the S-expression language from CS503 Project 1 (parts 1.1 to 
 - 1.3: global variables with `(set name value)` (returns the value) stored in `rho`; an unset symbol evaluates to itself; predicates `nil?`, `atom?`, `list?` (true is `T`, false is `()`); `;` comments.
 - 1.4: `and?`, `or?` (short-circuit), `eq?`, `if`, and `cond` with a flat `(a0 b0 a1 b1 ...)` list.
 - 1.5: `add`, `sub`, `mul`, `div`, `rem`, `less` on integer symbols.
+- 1.6: a local environment stack of `((names) (values))` frames, searched (top frame) before `rho`; `(function (args) body)` evaluates to itself.
 
 | Part | Status |
 |---|---|
@@ -20,7 +21,7 @@ An interpreter for the S-expression language from CS503 Project 1 (parts 1.1 to 
 | 1.3 Variables | Done |
 | 1.4 Logical | Done |
 | 1.5 Math | Done |
-| 1.6 Local Environment | Not started |
+| 1.6 Local Environment | Done |
 | 1.7 Function calls | Not started |
 | 1.8 def | Not started |
 
@@ -60,9 +61,10 @@ tests/
 
 ## Limitations
 
-- Parts 1.6 to 1.8 are not done yet: no local variables or functions.
+- Parts 1.7 to 1.8 are not done yet: no function calls or `def`.
 - `car` or `cdr` on an atom or `()`, and `cons` or `set` with one argument, are undefined in the spec; they print `error: ...` and the loop moves on. `atom?` and `list?` on `()` (also undefined) return `()`.
 - Math on a non-number, or `div`/`rem` by 0, prints `error: ...`.
+- Local lookup searches only the top frame of the local stack, then `rho`. 1.6 has no way to push a frame from Lisp yet (function calls come in 1.7), so `tests/1.6.lisp` checks function expressions; local lookup was checked by starting the stack with the spec's `((a b c) (2 3 x))` frame.
 - `cond` with no true test (undefined in the spec) returns `()`.
 - The reader does not accept dotted notation such as `(a . b)` (the spec does not require it), though the printer can print it.
 - An unbalanced `)` or a missing `)` prints `error: ...` and the reader moves on.

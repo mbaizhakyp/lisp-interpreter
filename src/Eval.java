@@ -1,7 +1,8 @@
-/** Evaluates S-expressions. Symbols are looked up in rho; a list starting with a built-in name is a call; anything else evaluates to itself. */
+/** Evaluates S-expressions. Symbols are looked up in the local environment, then rho; a list starting with a built-in name is a call; anything else evaluates to itself. */
 class Eval {
     static final SExpr NIL = Nil.NIL, T = new Symbol("T");
     static SExpr rho = NIL; // global environment ((name value) ...), newest first
+    static SExpr env = NIL; // local environment stack (((names) (values)) ...), top frame first
 
     static SExpr eval(SExpr s) {
         if (s instanceof Symbol) return lookup(s);
@@ -32,6 +33,7 @@ class Eval {
             }
             case "if" -> eval(arg(args, eval(arg(args, 0)) != NIL ? 1 : 2));
             case "cond" -> cond(arg(args, 0));
+            case "function" -> s; // (function (args) body) evaluates to itself
             case "add", "sub", "mul", "div", "rem", "less" -> {
                 long x = num(eval(arg(args, 0))), y = num(eval(arg(args, 1)));
                 yield switch (f.name()) {
@@ -54,8 +56,11 @@ class Eval {
         return NIL;
     }
 
-    /** The value of the newest (name value) in rho, or the name itself if unset. */
+    /** A name's value in the top local frame, else its newest value in rho, else the name itself. */
     static SExpr lookup(SExpr name) {
+        if (env instanceof Cons top)
+            for (SExpr n = arg(top.car(), 0), v = arg(top.car(), 1); n instanceof Cons nc; n = nc.cdr(), v = ((Cons) v).cdr())
+                if (nc.car().equals(name)) return ((Cons) v).car();
         for (SExpr e = rho; e instanceof Cons c; e = c.cdr())
             if (arg(c.car(), 0).equals(name)) return arg(c.car(), 1);
         return name;
