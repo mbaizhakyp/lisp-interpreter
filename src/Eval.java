@@ -32,6 +32,17 @@ class Eval {
             }
             case "if" -> eval(arg(args, eval(arg(args, 0)) != NIL ? 1 : 2));
             case "cond" -> cond(arg(args, 0));
+            case "add", "sub", "mul", "div", "rem", "less" -> {
+                long x = num(eval(arg(args, 0))), y = num(eval(arg(args, 1)));
+                yield switch (f.name()) {
+                    case "add" -> new Symbol("" + (x + y));
+                    case "sub" -> new Symbol("" + (x - y));
+                    case "mul" -> new Symbol("" + (x * y));
+                    case "div" -> new Symbol("" + (x / y));
+                    case "rem" -> new Symbol("" + (x % y));
+                    default -> truth(x < y);
+                };
+            }
             default -> s;
         };
     }
@@ -54,6 +65,10 @@ class Eval {
     static SExpr arg(SExpr list, int i) {
         for (; i > 0; i--) list = ((Cons) list).cdr();
         return ((Cons) list).car();
+    }
+
+    static long num(SExpr s) {
+        return Long.parseLong(((Symbol) s).name());
     }
 
     static SExpr truth(boolean b) {
