@@ -1,101 +1,142 @@
-/** Evaluates S-expressions. Symbols are looked up in the local environment, then rho; a list starting with a built-in or a function name is a call; anything else evaluates to itself. */
+/**
+ * Evaluates S-expressions.
+ * A symbol is a variable lookup. A list that starts with the name of a built-in
+ * or a user function is a call. Anything else evaluates to itself.
+ */
 class Eval {
-    static final SExpr NIL = Nil.NIL, T = new Symbol("T"), FUNCTION = new Symbol("function");
-    static SExpr rho = NIL; // global environment ((name value) ...), newest first
-    static SExpr env = NIL; // local environment stack (((names) (values)) ...), top frame first
+    static final SExpr NIL = Nil.NIL;
+    static final Symbol T = new Symbol("T");
+    static final Symbol FUNCTION = new Symbol("function");
+
+    static SExpr rho = NIL; // global variables: ((name value) ...), newest first
+    static SExpr env = NIL; // local environment stack: (((names) (values)) ...), top frame first
 
     static SExpr eval(SExpr s) {
         if (s instanceof Symbol) return lookup(s);
         if (!(s instanceof Cons c && c.car() instanceof Symbol f)) return s;
         SExpr args = c.cdr();
-        return switch (f.name()) {
-            case "quote" -> arg(args, 0);
-            case "car" -> ((Cons) eval(arg(args, 0))).car();
-            case "cdr" -> ((Cons) eval(arg(args, 0))).cdr();
-            case "cons" -> new Cons(eval(arg(args, 0)), eval(arg(args, 1)));
-            case "eval" -> eval(eval(arg(args, 0)));
-            case "set" -> set(arg(args, 0), eval(arg(args, 1)));
-            case "def" -> set(arg(args, 0), new Cons(FUNCTION, ((Cons) args).cdr())); // (def f (args) body) is (set f (function (args) body))
-            case "nil?", "not?" -> truth(eval(arg(args, 0)) == NIL);
-            case "atom?" -> truth(eval(arg(args, 0)) instanceof Symbol);
-            case "list?" -> truth(eval(arg(args, 0)) instanceof Cons);
-            case "and?" -> eval(arg(args, 0)) == NIL ? NIL : eval(arg(args, 1));
-            case "or?" -> {
-                SExpr v = eval(arg(args, 0));
-                yield v != NIL ? v : eval(arg(args, 1));
-            }
-            case "eq?" -> {
-                SExpr x = eval(arg(args, 0));
-                yield truth(x instanceof Symbol && x.equals(eval(arg(args, 1))));
-            }
-            case "if" -> eval(arg(args, eval(arg(args, 0)) != NIL ? 1 : 2));
-            case "cond" -> cond(arg(args, 0));
-            case "function" -> s; // (function (args) body) evaluates to itself
-            case "add", "sub", "mul", "div", "rem", "less" -> {
-                long x = num(eval(arg(args, 0))), y = num(eval(arg(args, 1)));
-                yield switch (f.name()) {
-                    case "add" -> new Symbol("" + (x + y));
-                    case "sub" -> new Symbol("" + (x - y));
-                    case "mul" -> new Symbol("" + (x * y));
-                    case "div" -> new Symbol("" + (x / y));
-                    case "rem" -> new Symbol("" + (x % y));
-                    default -> truth(x < y);
-                };
-            }
-            default -> call(lookup(f), args, s);
-        };
-    }
 
-    /** Calls fn = (function params body): pushes the frame (params actuals), evaluates body, pops. Not a function: s itself. */
-    static SExpr call(SExpr fn, SExpr args, SExpr s) {
-        if (!(fn instanceof Cons fc && fc.car().equals(FUNCTION))) return s;
-        SExpr frame = new Cons(arg(fn, 1), new Cons(evalAll(args), NIL));
-        env = new Cons(frame, env);
-        try {
-            return eval(arg(fn, 2));
-        } finally {
-            env = ((Cons) env).cdr();
+        switch (f.name()) {
+            // these do not evaluate (all of) their arguments
+            case "quote":    return arg(args, 0);
+            case "set":      return set(arg(args, 0), eval(arg(args, 1)));
+            case "def":      return set(arg(args, 0), list(FUNCTION, arg(args, 1), arg(args, 2)));
+            case "function": return s;
+            case "and?":     return eval(arg(args, 0)) == NIL ? NIL : eval(arg(args, 1));
+            case "or?":
+                SExpr first = eval(arg(args, 0));
+                return first != NIL ? first : eval(arg(args, 1));
+            case "if":       return eval(arg(args, 0)) != NIL ? eval(arg(args, 1)) : eval(arg(args, 2));
+            case "cond":     return cond(arg(args, 0));
+
+            // these evaluate all of their arguments
+            case "car":   return car(eval(arg(args, 0)));
+            case "cdr":   return cdr(eval(arg(args, 0)));
+            case "cons":  return new Cons(eval(arg(args, 0)), eval(arg(args, 1)));
+            case "eval":  return eval(eval(arg(args, 0)));
+            case "nil?":
+            case "not?":  return truth(eval(arg(args, 0)) == NIL);
+            case "atom?": return truth(eval(arg(args, 0)) instanceof Symbol);
+            case "list?": return truth(eval(arg(args, 0)) instanceof Cons);
+            case "eq?":   return truth(eval(arg(args, 0)) instanceof Symbol a && a.equals(eval(arg(args, 1))));
+            case "add": case "sub": case "mul": case "div": case "rem": case "less":
+                return math(f.name(), number(eval(arg(args, 0))), number(eval(arg(args, 1))));
+            default:      return call(lookup(f), args, s);
         }
     }
 
-    static SExpr evalAll(SExpr list) {
-        return list instanceof Cons c ? new Cons(eval(c.car()), evalAll(c.cdr())) : NIL;
+    /** Calls a user function (function (params) body), or returns s if fn is not a function. */
+    static SExpr call(SExpr fn, SExpr args, SExpr s) {
+        if (!(fn instanceof Cons && car(fn).equals(FUNCTION))) return s;
+        env = new Cons(list(arg(fn, 1), evalAll(args)), env); // push the frame ((params) (values))
+        SExpr result = eval(arg(fn, 2));
+        env = cdr(env); // pop it
+        return result;
     }
 
-    /** (cond (a0 b0 a1 b1 ...)): the value of the b after the first a that is not (), or () if there is none. */
+    /** (cond (a0 b0 a1 b1 ...)): evaluates the first b whose a is not (). */
     static SExpr cond(SExpr pairs) {
-        for (; pairs instanceof Cons p; pairs = ((Cons) p.cdr()).cdr())
-            if (eval(p.car()) != NIL) return eval(arg(p, 1));
+        while (pairs != NIL) {
+            if (eval(arg(pairs, 0)) != NIL) return eval(arg(pairs, 1));
+            pairs = cdr(cdr(pairs));
+        }
         return NIL;
     }
 
-    /** Adds (name value) to the front of rho and returns the value. */
-    static SExpr set(SExpr name, SExpr v) {
-        rho = new Cons(new Cons(name, new Cons(v, NIL)), rho);
-        return v;
+    static SExpr math(String op, long a, long b) {
+        switch (op) {
+            case "add": return symbol(a + b);
+            case "sub": return symbol(a - b);
+            case "mul": return symbol(a * b);
+            case "div": return symbol(a / b);
+            case "rem": return symbol(a % b);
+            default:    return truth(a < b); // less
+        }
     }
 
-    /** A name's value in the top local frame, else its newest value in rho, else the name itself. */
+    static SExpr set(SExpr name, SExpr value) {
+        rho = new Cons(list(name, value), rho);
+        return value;
+    }
+
+    /** Searches the top local frame, then the globals. An unset symbol evaluates to itself. */
     static SExpr lookup(SExpr name) {
-        if (env instanceof Cons top)
-            for (SExpr n = arg(top.car(), 0), v = arg(top.car(), 1); n instanceof Cons nc; n = nc.cdr(), v = ((Cons) v).cdr())
-                if (nc.car().equals(name)) return ((Cons) v).car();
-        for (SExpr e = rho; e instanceof Cons c; e = c.cdr())
-            if (arg(c.car(), 0).equals(name)) return arg(c.car(), 1);
+        if (env != NIL) {
+            SExpr names = arg(car(env), 0);
+            SExpr values = arg(car(env), 1);
+            while (names != NIL) {
+                if (car(names).equals(name)) return car(values);
+                names = cdr(names);
+                values = cdr(values);
+            }
+        }
+        for (SExpr e = rho; e != NIL; e = cdr(e)) {
+            if (arg(car(e), 0).equals(name)) return arg(car(e), 1);
+        }
         return name;
     }
 
-    /** The i-th element (from 0) of a list. */
-    static SExpr arg(SExpr list, int i) {
-        for (; i > 0; i--) list = ((Cons) list).cdr();
-        return ((Cons) list).car();
+    static SExpr evalAll(SExpr list) {
+        return list == NIL ? NIL : new Cons(eval(car(list)), evalAll(cdr(list)));
     }
 
-    static long num(SExpr s) {
-        return Long.parseLong(((Symbol) s).name());
+    // small helpers
+
+    static SExpr car(SExpr list) {
+        if (!(list instanceof Cons c)) throw new IllegalStateException("not a list: " + list);
+        return c.car();
+    }
+
+    static SExpr cdr(SExpr list) {
+        if (!(list instanceof Cons c)) throw new IllegalStateException("not a list: " + list);
+        return c.cdr();
+    }
+
+    /** The i-th element of a list, counting from 0. */
+    static SExpr arg(SExpr list, int i) {
+        for (; i > 0; i--) list = cdr(list);
+        return car(list);
+    }
+
+    static SExpr list(SExpr... items) {
+        SExpr result = NIL;
+        for (int i = items.length - 1; i >= 0; i--) result = new Cons(items[i], result);
+        return result;
     }
 
     static SExpr truth(boolean b) {
         return b ? T : NIL;
+    }
+
+    static long number(SExpr s) {
+        try {
+            return Long.parseLong(s.toString());
+        } catch (NumberFormatException e) {
+            throw new IllegalStateException("not a number: " + s);
+        }
+    }
+
+    static SExpr symbol(long n) {
+        return new Symbol(Long.toString(n));
     }
 }

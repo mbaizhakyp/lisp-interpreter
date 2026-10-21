@@ -12,11 +12,14 @@ record Symbol(String name) implements SExpr {
 /** A pair cell. Prints as (a b c), with a dotted tail when the last cdr is not (): (a . b). */
 record Cons(SExpr car, SExpr cdr) implements SExpr {
     public String toString() {
-        StringBuilder s = new StringBuilder("(").append(car);
+        String s = "(" + car;
         SExpr rest = cdr;
-        for (; rest instanceof Cons c; rest = c.cdr) s.append(' ').append(c.car);
-        if (rest != Nil.NIL) s.append(" . ").append(rest);
-        return s.append(')').toString();
+        while (rest instanceof Cons next) {
+            s += " " + next.car;
+            rest = next.cdr;
+        }
+        if (rest != Nil.NIL) s += " . " + rest;
+        return s + ")";
     }
 }
 

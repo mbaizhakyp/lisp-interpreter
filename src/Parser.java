@@ -3,13 +3,16 @@ import java.util.Scanner;
 import java.util.regex.Pattern;
 
 /**
- * Reads S-expressions one at a time. Expressions may span lines, and a line may hold several; ; starts a comment.
+ * Reads S-expressions one at a time, following this grammar:
  *
  *   START => EXPR START | EOF
  *   EXPR  => ATOM | ( LIST | ' EXPR
  *   LIST  => ) | EXPR LIST
+ *
+ * An expression may span lines, and a line may hold several. ; starts a comment.
  */
 public class Parser {
+    // a token is a comment, a parenthesis, a quote, or a symbol
     private static final Pattern TOKEN = Pattern.compile(";.*|[()']|[^\\s()';]+");
     private static final Symbol QUOTE = new Symbol("quote");
     private final Scanner in;
@@ -18,28 +21,32 @@ public class Parser {
         this.in = new Scanner(in);
     }
 
-    /** Returns the next S-expression, or null at end of input. */
+    /** Returns the next S-expression, or null at the end of input. */
     public SExpr next() {
-        String t = token();
-        return t == null ? null : expr(t);
+        String token = token();
+        return token == null ? null : expr(token);
     }
 
+    /** Returns the next token, skipping whitespace and comments, or null at the end of input. */
     private String token() {
-        String t;
-        do t = in.findWithinHorizon(TOKEN, 0); // skips whitespace; null at EOF
-        while (t != null && t.startsWith(";")); // skips ; comments
-        return t;
+        String token = in.findWithinHorizon(TOKEN, 0);
+        while (token != null && token.startsWith(";")) {
+            token = in.findWithinHorizon(TOKEN, 0);
+        }
+        return token;
     }
 
-    private SExpr expr(String t) {
-        if (t == null) throw new IllegalStateException("unexpected end of input");
-        if (t.equals(")")) throw new IllegalStateException("unexpected )");
-        if (t.equals("'")) return new Cons(QUOTE, new Cons(expr(token()), Nil.NIL)); // 'x is (quote x)
-        return t.equals("(") ? list() : new Symbol(t);
+    private SExpr expr(String token) {
+        if (token == null) throw new IllegalStateException("unexpected end of input");
+        if (token.equals(")")) throw new IllegalStateException("unexpected )");
+        if (token.equals("(")) return list();
+        if (token.equals("'")) return new Cons(QUOTE, new Cons(expr(token()), Nil.NIL)); // 'x is (quote x)
+        return new Symbol(token);
     }
 
     private SExpr list() {
-        String t = token();
-        return ")".equals(t) ? Nil.NIL : new Cons(expr(t), list());
+        String token = token();
+        if (")".equals(token)) return Nil.NIL;
+        return new Cons(expr(token), list());
     }
 }
