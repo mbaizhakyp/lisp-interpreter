@@ -14,12 +14,9 @@ class Eval {
             case "cdr" -> ((Cons) eval(arg(args, 0))).cdr();
             case "cons" -> new Cons(eval(arg(args, 0)), eval(arg(args, 1)));
             case "eval" -> eval(eval(arg(args, 0)));
-            case "set" -> {
-                SExpr v = eval(arg(args, 1));
-                rho = new Cons(new Cons(arg(args, 0), new Cons(v, NIL)), rho);
-                yield v;
-            }
-            case "nil?" -> truth(eval(arg(args, 0)) == NIL);
+            case "set" -> set(arg(args, 0), eval(arg(args, 1)));
+            case "def" -> set(arg(args, 0), new Cons(FUNCTION, ((Cons) args).cdr())); // (def f (args) body) is (set f (function (args) body))
+            case "nil?", "not?" -> truth(eval(arg(args, 0)) == NIL);
             case "atom?" -> truth(eval(arg(args, 0)) instanceof Symbol);
             case "list?" -> truth(eval(arg(args, 0)) instanceof Cons);
             case "and?" -> eval(arg(args, 0)) == NIL ? NIL : eval(arg(args, 1));
@@ -70,6 +67,12 @@ class Eval {
         for (; pairs instanceof Cons p; pairs = ((Cons) p.cdr()).cdr())
             if (eval(p.car()) != NIL) return eval(arg(p, 1));
         return NIL;
+    }
+
+    /** Adds (name value) to the front of rho and returns the value. */
+    static SExpr set(SExpr name, SExpr v) {
+        rho = new Cons(new Cons(name, new Cons(v, NIL)), rho);
+        return v;
     }
 
     /** A name's value in the top local frame, else its newest value in rho, else the name itself. */

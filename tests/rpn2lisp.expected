@@ -1,0 +1,18 @@
+(function (sym) (cond ((eq? (quote +) sym) (quote t) (eq? (quote -) sym) (quote t) (eq? (quote *) sym) (quote t) (eq? (quote /) sym) (quote t) (quote t) ())))
+(function (sym) (not? (op? sym)))
+(function (rpn_input) (r2l rpn_input ()))
+(function (rpn stack) (cond ((nil? rpn) (car stack) (op? (car rpn)) (r2l (cdr rpn) (updatedstack stack (createlispexpr (car (cdr stack)) (car stack) (car rpn)))) (quote t) (r2l (cdr rpn) (cons (car rpn) stack)))))
+(function (stack item) (cons item (cdr (cdr stack))))
+(function (left right op) (list3 op left right))
+(function (a b c) (cons a (cons b (cons c ()))))
+(function (a b) (add a b))
+(function (a b) (sub a b))
+(function (a b) (mul a b))
+(function (a b) (div a b))
+4
+(+ 2 (- x 3))
+3
+(- (+ 5 (* (+ 1 2) 4)) 3)
+14
+T
+()

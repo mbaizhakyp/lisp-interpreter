@@ -1,0 +1,17 @@
+(function (hand) (if (nil? hand) 0 (add (car hand) (sum (cdr hand)))))
+(function (hand) (cond ((nil? hand) () (eq? (car hand) 1) (quote T) (quote T) (has-ace? (cdr hand)))))
+(function (hand) (if (and? (has-ace? hand) (less (sum hand) 12)) (add (sum hand) 10) (sum hand)))
+(function (hand) (less 21 (score hand)))
+(function (hand deck) (if (less (score hand) 17) (dealer (cons (car deck) hand) (cdr deck)) hand))
+(function (player house) (cond ((bust? player) (quote dealer) (bust? house) (quote player) (less (score house) (score player)) (quote player) (less (score player) (score house)) (quote dealer) (quote T) (quote push))))
+(function (player house deck) (winner player (dealer house deck)))
+21
+21
+16
+T
+(5 2 10 4)
+dealer
+player
+player
+dealer
+push

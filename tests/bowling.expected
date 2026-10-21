@@ -1,0 +1,11 @@
+(function (r) (add (car r) (car (cdr r))))
+(function (r) (add (sum2 r) (car (cdr (cdr r)))))
+(function (r) (nil? (less (car r) 10)))
+(function (r) (nil? (less (sum2 r) 10)))
+(function (r n) (cond ((less 10 n) 0 (strike? r) (add (sum3 r) (frame (cdr r) (add n 1))) (spare? r) (add (sum3 r) (frame (cdr (cdr r)) (add n 1))) (quote T) (add (sum2 r) (frame (cdr (cdr r)) (add n 1))))))
+(function (r) (frame r 1))
+0
+70
+190
+300
+167

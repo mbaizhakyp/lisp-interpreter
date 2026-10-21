@@ -14,6 +14,9 @@ An interpreter for the S-expression language from CS503 Project 1 (parts 1.1 to 
 - 1.5: `add`, `sub`, `mul`, `div`, `rem`, `less` on integer symbols.
 - 1.6: a local environment stack of `((names) (values))` frames, searched (top frame) before `rho`; `(function (args) body)` evaluates to itself.
 - 1.7: calling user functions: arguments are evaluated, a frame is pushed, the body is evaluated, the frame is popped.
+- 1.8: `(def name (args) body)` as shorthand for `(set name (function (args) body))`; `not?` (same as `nil?`).
+
+The final tests run three full programs: `bowling` and `rpn2lisp` from the instructor, and a `blackjack` program written for this project.
 
 | Part | Status |
 |---|---|
@@ -24,7 +27,7 @@ An interpreter for the S-expression language from CS503 Project 1 (parts 1.1 to 
 | 1.5 Math | Done |
 | 1.6 Local Environment | Done |
 | 1.7 Function calls | Done |
-| 1.8 def | Not started |
+| 1.8 def | Done |
 
 ## Build
 
@@ -56,16 +59,19 @@ src/
   Parser.java      turns text into S-expressions, 'x into (quote x), skips ; comments
   SExpr.java       S-expression types (Symbol, Cons, Nil); each prints itself
 tests/
-  NAME.lisp        test input for part NAME
-  NAME.expected    expected output
+  1.N.lisp         test input for part 1.N
+  bowling.lisp     instructor's bowling scorer
+  rpn2lisp.lisp    instructor's RPN-to-lisp converter
+  blackjack.lisp   blackjack hand scoring, dealer play, and winner
+  NAME.expected    expected output for NAME.lisp
 ```
 
 ## Limitations
 
-- Part 1.8 is not done yet: no `def`.
 - `car` or `cdr` on an atom or `()`, and `cons` or `set` with one argument, are undefined in the spec; they print `error: ...` and the loop moves on. `atom?` and `list?` on `()` (also undefined) return `()`.
 - Math on a non-number, or `div`/`rem` by 0, prints `error: ...`.
 - Local lookup searches only the top frame of the local stack, then `rho`. Built-ins are checked before user functions, so a user function cannot replace a built-in. Argument counts are not checked, and the optional inline `((function (a b) ...) 1 2)` call is not supported.
+- `bowling.lisp` and `rpn2lisp.lisp` needed fixes to run: missing parentheses, bowling's missing open-frame case, rpn2lisp's `not` (here `not?`), and rpn2lisp's first `cond`, which must wrap its pairs in one list as the 1.4 spec requires. rpn2lisp builds expressions with `+ - * /`, so the test defines those with `def` before evaluating them.
 - `cond` with no true test (undefined in the spec) returns `()`.
 - The reader does not accept dotted notation such as `(a . b)` (the spec does not require it), though the printer can print it.
 - An unbalanced `)` or a missing `)` prints `error: ...` and the reader moves on.

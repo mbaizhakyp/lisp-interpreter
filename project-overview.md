@@ -156,6 +156,7 @@ Keeping `rho` and the local stack as actual S-expressions (not Java maps) is wha
 4. 1.4 + 1.5, test, **submit**.
 5. 1.6 + 1.7 + 1.8, test with recursive functions (factorial, list length, append, reverse), **submit**.
 6. Final submission with a test file of example sessions.
+   - **Done 2026-10-21:** all three run as `tests/bowling.lisp`, `tests/rpn2lisp.lisp`, `tests/blackjack.lisp` (fixes listed in the README's Limitations).
    - **Required by the instructor (relayed 2026-10-16):** the test code must include the **blackjack**, **bowling**, and **rpn2lisp** ("rev2lisp") programs, each as `tests/NAME.lisp` + `NAME.expected` that the interpreter runs.
      - `final/bowling.lisp` and `final/rpn2lisp.txt` hold the instructor's code as given (not in the zip or test loop yet). Blackjack we write ourselves.
      - bowling as given won't parse: `frame`'s `cond` is missing 3 closing parens and has no open-frame case (neither strike nor spare).
