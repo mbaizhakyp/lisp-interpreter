@@ -1,0 +1,7 @@
+(function (x) (mul x x))
+25
+6
+(function (f x) (f (f x)))
+(function (n) (add n 1))
+7
+((a b) c)

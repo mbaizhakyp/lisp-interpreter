@@ -1,7 +1,7 @@
 /**
  * Evaluates S-expressions.
- * A symbol is a variable lookup. A list that starts with the name of a built-in
- * or a user function is a call. Anything else evaluates to itself.
+ * A symbol is a variable lookup. A list that starts with the name of a built-in,
+ * a user function, or a function expression is a call. Anything else evaluates to itself.
  */
 class Eval {
     static final SExpr NIL = Nil.NIL;
@@ -13,8 +13,9 @@ class Eval {
 
     static SExpr eval(SExpr s) {
         if (s instanceof Symbol) return lookup(s);
-        if (!(s instanceof Cons c && c.car() instanceof Symbol f)) return s;
+        if (!(s instanceof Cons c)) return s;
         SExpr args = c.cdr();
+        if (!(c.car() instanceof Symbol f)) return call(eval(c.car()), args, s); // ((lambda (x) ...) 5)
 
         switch (f.name()) {
             // these do not evaluate (all of) their arguments
@@ -28,6 +29,12 @@ class Eval {
                 return first != NIL ? first : eval(arg(args, 1));
             case "if":       return eval(arg(args, 0)) != NIL ? eval(arg(args, 1)) : eval(arg(args, 2));
             case "cond":     return cond(arg(args, 0));
+            case "begin":    return begin(args);
+            case "while":
+                while (eval(arg(args, 0)) != NIL) begin(cdr(args));
+                return NIL;
+            case "let":      return let(arg(args, 0), cdr(args));
+            case "lambda":   return new Cons(FUNCTION, args); // (lambda (x) body) is (function (x) body)
 
             // these evaluate all of their arguments
             case "car":   return car(eval(arg(args, 0)));
@@ -38,6 +45,7 @@ class Eval {
             case "not?":  return truth(eval(arg(args, 0)) == NIL);
             case "atom?": return truth(eval(arg(args, 0)) instanceof Symbol);
             case "list?": return truth(eval(arg(args, 0)) instanceof Cons);
+            case "print": return print(evalAll(args));
             case "eq?":   return truth(eval(arg(args, 0)) instanceof Symbol a && a.equals(eval(arg(args, 1))));
             case "add": case "sub": case "mul": case "div": case "rem": case "less":
                 return math(f.name(), number(eval(arg(args, 0))), number(eval(arg(args, 1))));
@@ -63,6 +71,39 @@ class Eval {
         return NIL;
     }
 
+    /** (begin e1 e2 ...): evaluates each e in order and returns the last value. */
+    static SExpr begin(SExpr body) {
+        SExpr result = NIL;
+        for (; body != NIL; body = cdr(body)) result = eval(car(body));
+        return result;
+    }
+
+    /** (let ((x 1) (y 2)) body ...): runs body with x and y added to the current local frame. */
+    static SExpr let(SExpr bindings, SExpr body) {
+        SExpr names = env == NIL ? NIL : arg(car(env), 0);
+        SExpr values = env == NIL ? NIL : arg(car(env), 1);
+        for (; bindings != NIL; bindings = cdr(bindings)) {
+            names = new Cons(arg(car(bindings), 0), names);
+            values = new Cons(eval(arg(car(bindings), 1)), values);
+        }
+        env = new Cons(list(names, values), env);
+        SExpr result = begin(body);
+        env = cdr(env);
+        return result;
+    }
+
+    /** Prints the values on one line, strings without their quotes, and returns the last value. */
+    static SExpr print(SExpr values) {
+        String line = "";
+        SExpr last = NIL;
+        for (; values != NIL; values = cdr(values)) {
+            last = car(values);
+            line += (line.isEmpty() ? "" : " ") + last.toString().replace("\"", "");
+        }
+        System.out.println(line);
+        return last;
+    }
+
     static SExpr math(String op, long a, long b) {
         switch (op) {
             case "add": return symbol(a + b);
@@ -74,22 +115,30 @@ class Eval {
         }
     }
 
+    /** Changes a local variable if the top local frame has one with this name, else sets a global. */
     static SExpr set(SExpr name, SExpr value) {
-        rho = new Cons(list(name, value), rho);
+        if (env != NIL && local(name) != null) {
+            SExpr frame = car(env); // add (name value) in front, hiding the old value
+            env = new Cons(list(new Cons(name, arg(frame, 0)), new Cons(value, arg(frame, 1))), cdr(env));
+        } else {
+            rho = new Cons(list(name, value), rho);
+        }
         return value;
+    }
+
+    /** The value of name in the top local frame, or null if it is not there. */
+    static SExpr local(SExpr name) {
+        SExpr values = arg(car(env), 1);
+        for (SExpr names = arg(car(env), 0); names != NIL; names = cdr(names), values = cdr(values)) {
+            if (car(names).equals(name)) return car(values);
+        }
+        return null;
     }
 
     /** Searches the top local frame, then the globals. An unset symbol evaluates to itself. */
     static SExpr lookup(SExpr name) {
-        if (env != NIL) {
-            SExpr names = arg(car(env), 0);
-            SExpr values = arg(car(env), 1);
-            while (names != NIL) {
-                if (car(names).equals(name)) return car(values);
-                names = cdr(names);
-                values = cdr(values);
-            }
-        }
+        SExpr value = env == NIL ? null : local(name);
+        if (value != null) return value;
         for (SExpr e = rho; e != NIL; e = cdr(e)) {
             if (arg(car(e), 0).equals(name)) return arg(car(e), 1);
         }

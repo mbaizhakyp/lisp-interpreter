@@ -1,0 +1,6 @@
+6
+x
+10
+11
+(function (a b) (let ((aa (mul a a)) (bb (mul b b))) (add aa bb)))
+25
