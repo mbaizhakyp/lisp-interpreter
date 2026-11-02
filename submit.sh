@@ -1,5 +1,5 @@
 #!/bin/sh
-# Not part of the submission. Usage: sh submit.sh 1.2
+# Not part of the submission. Usage: sh submit.sh final
 # Builds, runs the tests as in the README, and zips submissions/<part>.zip.
 cd "$(dirname "$0")" && javac -d out src/*.java || exit 1
 for t in tests/*.lisp; do

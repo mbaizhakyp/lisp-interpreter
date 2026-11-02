@@ -10,10 +10,11 @@ import java.util.regex.Pattern;
  *   LIST  => ) | EXPR LIST
  *
  * An expression may span lines, and a line may hold several. ; starts a comment.
+ * A string "like this" is read as one symbol, quotes included.
  */
 public class Parser {
-    // a token is a comment, a parenthesis, a quote, or a symbol
-    private static final Pattern TOKEN = Pattern.compile(";.*|[()']|[^\\s()';]+");
+    // a token is a comment, a parenthesis, a quote, a string, or a symbol
+    private static final Pattern TOKEN = Pattern.compile(";.*|[()']|\"[^\"]*\"|[^\\s()';]+");
     private static final Symbol QUOTE = new Symbol("quote");
     private final Scanner in;
 
